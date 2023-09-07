@@ -1,0 +1,187 @@
+---
+# Source: jenkins/templates/jenkins-controller-statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: jenkins
+  namespace: default
+  labels:
+    "app.kubernetes.io/name": 'jenkins'
+    "app.kubernetes.io/managed-by": ""
+    "app.kubernetes.io/instance": "local"
+    "app.kubernetes.io/component": "jenkins-controller"
+spec:
+  serviceName: jenkins
+  replicas: 1
+  selector:
+    matchLabels:
+      "app.kubernetes.io/component": "jenkins-controller"
+      "app.kubernetes.io/instance": "local"
+  template:
+    metadata:
+      labels:
+        "app.kubernetes.io/name": 'jenkins'
+        "app.kubernetes.io/managed-by": ""
+        "app.kubernetes.io/instance": "local"
+        "app.kubernetes.io/component": "jenkins-controller"
+      annotations:
+        checksum/config: 2d32b803a625567d3c5aad42c5ebafb53c586cd8b39bdf3d34afdb6ae3c27e32
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+      serviceAccountName: "jenkins"
+      initContainers:
+        - name: "init"
+          image: "docker.io/jenkins/jenkins:lts-jdk17"
+          imagePullPolicy: "Always"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsUser: 1000
+          command: [ "sh", "/var/jenkins_config/apply_config.sh" ]
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 4096Mi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+            - mountPath: /var/jenkins_config
+              name: jenkins-config
+      containers:
+        - name: jenkins
+          image: "docker.io/jenkins/jenkins:lts-jdk17"
+          imagePullPolicy: "Always"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsUser: 1000
+          args: [ "--httpPort=8080"]
+          env:
+            - name: SECRETS
+              value: /run/secrets/additional
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: JAVA_OPTS
+              value: >-
+                 -Dcasc.reload.token=$(POD_NAME)
+            - name: JENKINS_OPTS
+              value: >-
+                 --webroot=/var/jenkins_cache/war
+            - name: JENKINS_SLAVE_AGENT_PORT
+              value: "50000"
+
+            - name: CASC_JENKINS_CONFIG
+              value: /var/jenkins_home/casc_configs
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 50000
+              name: agent-listener
+          startupProbe:
+            failureThreshold: 12
+            httpGet:
+              path: '/login'
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: '/login'
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: '/login'
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 4096Mi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+              readOnly: false
+            - mountPath: /var/jenkins_config
+              name: jenkins-config
+              readOnly: true
+            - name: sc-config-volume
+              mountPath: /var/jenkins_home/casc_configs
+            - name: jenkins-secrets
+              mountPath: /run/secrets/additional
+              readOnly: true
+            - name: jenkins-cache
+              mountPath: /var/jenkins_cache
+            - mountPath: /tmp
+              name: tmp-volume
+        - name: config-reload
+          image: "kiwigrid/k8s-sidecar:1.24.4"
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: LABEL
+              value: "jenkins-jenkins-config"
+            - name: FOLDER
+              value: "/var/jenkins_home/casc_configs"
+            - name: NAMESPACE
+              value: 'default'
+            - name: REQ_URL
+              value: "http://localhost:8080/reload-configuration-as-code/?casc-reload-token=$(POD_NAME)"
+            - name: REQ_METHOD
+              value: "POST"
+            - name: REQ_RETRY_CONNECT
+              value: "10"
+          resources:
+            {}
+          volumeMounts:
+            - name: sc-config-volume
+              mountPath: "/var/jenkins_home/casc_configs"
+            - name: jenkins-home
+              mountPath: /var/jenkins_home
+
+      volumes:
+      - name: jenkins-config
+        configMap:
+          name: jenkins
+      - name: jenkins-secrets
+        projected:
+          sources:
+          - secret:
+              name: jenkins
+              items:
+                - key: jenkins-admin-user
+                  path: jenkins-admin-username
+                - key: jenkins-admin-password
+                  path: jenkins-admin-password
+      - name: jenkins-cache
+        emptyDir: {}
+      - name: jenkins-home
+        persistentVolumeClaim:
+          claimName: jenkins
+      - name: sc-config-volume
+        emptyDir: {}
+      - name: tmp-volume
+        emptyDir: {}

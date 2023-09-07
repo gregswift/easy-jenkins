@@ -1,0 +1,7 @@
+spec:
+  template:
+    spec:
+      initContainers:
+        - image: "our-jenkins:local-jdk17"
+      containers:
+        - image: "our-jenkins:local-jdk17"
