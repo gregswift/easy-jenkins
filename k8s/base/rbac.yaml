@@ -7,9 +7,6 @@ metadata:
   name: jenkins-schedule-agents
   namespace: default
   labels:
-    "app.kubernetes.io/name": 'jenkins'
-    "app.kubernetes.io/managed-by": ""
-    "app.kubernetes.io/instance": "local"
     "app.kubernetes.io/component": "jenkins-controller"
 rules:
 - apiGroups: [""]
@@ -28,9 +25,6 @@ metadata:
   name: jenkins-casc-reload
   namespace: default
   labels:
-    "app.kubernetes.io/name": 'jenkins'
-    "app.kubernetes.io/managed-by": ""
-    "app.kubernetes.io/instance": "local"
     "app.kubernetes.io/component": "jenkins-controller"
 rules:
 - apiGroups: [""]
@@ -46,9 +40,6 @@ metadata:
   name: jenkins-schedule-agents
   namespace: default
   labels:
-    "app.kubernetes.io/name": 'jenkins'
-    "app.kubernetes.io/managed-by": ""
-    "app.kubernetes.io/instance": "local"
     "app.kubernetes.io/component": "jenkins-controller"
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -66,9 +57,6 @@ metadata:
   name: jenkins-watch-configmaps
   namespace: default
   labels:
-    "app.kubernetes.io/name": 'jenkins'
-    "app.kubernetes.io/managed-by": ""
-    "app.kubernetes.io/instance": "local"
     "app.kubernetes.io/component": "jenkins-controller"
 roleRef:
   apiGroup: rbac.authorization.k8s.io

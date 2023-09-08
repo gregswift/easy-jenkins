@@ -5,9 +5,6 @@ metadata:
   name: jenkins-agent
   namespace: default
   labels:
-    "app.kubernetes.io/name": 'jenkins'
-    "app.kubernetes.io/managed-by": ""
-    "app.kubernetes.io/instance": "local"
     "app.kubernetes.io/component": "jenkins-controller"
 spec:
   ports:
@@ -16,5 +13,5 @@ spec:
       name: agent-listener
   selector:
     "app.kubernetes.io/component": "jenkins-controller"
-    "app.kubernetes.io/instance": "local"
+    "app.kubernetes.io/instance": INSTANCE
   type: ClusterIP
