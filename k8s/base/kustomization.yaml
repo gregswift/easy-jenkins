@@ -8,3 +8,5 @@ resources:
 - rbac.yaml
 - secret.yaml
 - service-account.yaml
+transformers:
+- global-labels.yaml
