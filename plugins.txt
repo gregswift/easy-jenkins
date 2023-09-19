@@ -3,6 +3,7 @@ cloudbees-bitbucket-branch-source
 code-coverage-api
 configuration-as-code
 config-file-provider
+credentials
 credentials-binding
 dark-theme
 git
