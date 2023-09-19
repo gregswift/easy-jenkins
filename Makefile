@@ -4,7 +4,7 @@ CONTAINER_ENGINE ?= docker
 CONTAINER_ENV ?= .env
 CONTAINER_WORK_DIR ?= /data
 
-BUILD_DIR ?= builds/
+ARTIFACT_DIR ?= artifacts
 
 USER_AWS_CONFIG ?= ${HOME}/.aws
 
@@ -20,6 +20,10 @@ PLUGIN_FILE ?= plugins.yaml
 
 BASE_USER := -u $(shell id -u ${USER}):$(shell id -g ${USER})
 BASE_WORKDIR := -w $(CONTAINER_WORK_DIR) -v "$(CURDIR)":$(CONTAINER_WORK_DIR)
+
+KUSTOMIZE_BASE_FILES := $(wildcard k8s/base/*.yaml)
+KUSTOMIZE_OVERLAY_FILES := $(wildcard k8s/overlays/**/*.yaml)
+KUSTOMIZE_FILES := $(KUSTOMIZE_BASE_FILES) $(KUSTOMIZE_OVERLAY_FILES)
 
 # Rather than doing this we can use $(BASE_WORKDIR) and set environment variables
 # https://helm.sh/docs/helm/helm/
@@ -51,26 +55,34 @@ help:   ## Show this help, includes list of all actions.
 
 .PHONY: clean
 clean:
-	$(CONTAINER_ENGINE) clean
+	rm -rf $(ARTIFACT_DIR)
+	#$(CONTAINER_ENGINE) clean
 
 .PHONY: build
 build: update_plugins
 	$(CONTAINER_ENGINE) build -f Containerfile -t $(TGT_CONTAINER_IMAGE):$(TGT_CONTAINER_BASE_TAG) .
-	$(foreach TAG,$(TGT_CONTAINER_ALT_TAGS), $(CONTAINER_ENGINE) tag $(TGT_CONTAINER_IMAGE):$(TGT_CONTAINER_BASE_TAG) $(TGT_CONTAINER_IMAGE):$(TAG))
+	for TAG in $(TGT_CONTAINER_ALT_TAGS); do \
+		$(CONTAINER_ENGINE) tag $(TGT_CONTAINER_IMAGE):$(TGT_CONTAINER_BASE_TAG) $(TGT_CONTAINER_IMAGE):$${TAG}; \
+		done
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+$(ARTIFACT_DIR)/:
+	mkdir -p $(ARTIFACT_DIR)
 
-$(BUILD_DIR)/$(PLUGIN_FILE): $(SRC_PLUGIN_FILE) $(BUILD_DIR)
-	$(PLUGIN_CMD) --available-updates --output yaml > $(BUILD_DIR)/$(PLUGIN_FILE)
+$(ARTIFACT_DIR)/$(PLUGIN_FILE): $(SRC_PLUGIN_FILE) $(ARTIFACT_DIR)
+	$(PLUGIN_CMD) --available-updates --output yaml > $(ARTIFACT_DIR)/$(PLUGIN_FILE)
 	@# Error out if the file is smaller or empty or leave that to the executor? its all in git
 
 .PHONY: update_plugins
-update_plugins: $(BUILD_DIR)/$(PLUGIN_FILE)
+update_plugins: $(ARTIFACT_DIR)/$(PLUGIN_FILE)
 
-$(BUILD_DIR)/local.yaml: k8s/overlays/local/jenkins-controller-statefulset.yaml
-	kustomize build k8s/overlays/local
+$(ARTIFACT_DIR)/%.yaml: $(KUSTOMIZE_FILES) $(ARTIFACT_DIR)
+	kustomize build k8s/overlays/$(*) > $(@)
 
 .PHONY: local-up
-local-up: $(BUILD_DIR)/local.yaml	## Runs a local install using kind
+local-up: $(ARTIFACT_DIR)/local.yaml	## Runs a local install using kind
+	podman kube play artifacts/local.yaml
+
+.PHONY: local-up
+local-down: $(ARTIFACT_DIR)/local.yaml	## Runs a local install using kind
+	podman kube down artifacts/local.yaml
 

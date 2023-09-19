@@ -17,6 +17,6 @@ RUN apt-get update && apt-get install -y lsb-release
 
 USER jenkins
 
-COPY --chown=jenkins:jenkins plugins.yaml /var/jenkins_home/plugins.yaml
+COPY --chown=jenkins:jenkins artifacts/plugins.yaml /var/jenkins_home/plugins.yaml
 
 RUN jenkins-plugin-cli --plugin-file /var/jenkins_home/plugins.yaml --latest false
