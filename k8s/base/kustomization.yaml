@@ -1,6 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+- config.yaml
 - home-pvc.yaml
 - jenkins-agent-svc.yaml
 - jenkins-controller-statefulset.yaml
@@ -8,5 +9,8 @@ resources:
 - rbac.yaml
 - secret.yaml
 - service-account.yaml
+commonLabels:
+  app.kubernetes.io/name: jenkins
+  app.kubernetes.io/part-of: jenkins
 transformers:
 - global-labels.yaml

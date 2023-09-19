@@ -3,7 +3,6 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: jenkins
-  namespace: default
   labels:
     "app.kubernetes.io/component": "jenkins-controller"
 spec:

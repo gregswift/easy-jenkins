@@ -1,19 +1,16 @@
 ---
 # Source: jenkins/templates/jenkins-controller-statefulset.yaml
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: jenkins
-  namespace: default
   labels:
     "app.kubernetes.io/component": "jenkins-controller"
 spec:
-  serviceName: jenkins
   replicas: 1
   selector:
     matchLabels:
       "app.kubernetes.io/component": "jenkins-controller"
-      "app.kubernetes.io/instance": INSTANCE
   template:
     metadata:
       labels:
@@ -59,8 +56,6 @@ spec:
             runAsUser: 1000
           args: [ "--httpPort=8080"]
           env:
-            - name: SECRETS
-              value: /run/secrets/additional
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -118,9 +113,6 @@ spec:
               readOnly: true
             - name: sc-config-volume
               mountPath: /var/jenkins_home/casc_configs
-            - name: jenkins-secrets
-              mountPath: /run/secrets/additional
-              readOnly: true
             - name: jenkins-cache
               mountPath: /var/jenkins_cache
             - mountPath: /tmp
@@ -137,11 +129,11 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: LABEL
-              value: "jenkins-jenkins-config"
+              value: "jenkins-jcasc-config"
             - name: FOLDER
               value: "/var/jenkins_home/casc_configs"
-            - name: NAMESPACE
-              value: 'default'
+#            - name: NAMESPACE
+#              value: 'default'
             - name: REQ_URL
               value: "http://localhost:8080/reload-configuration-as-code/?casc-reload-token=$(POD_NAME)"
             - name: REQ_METHOD
@@ -160,16 +152,6 @@ spec:
       - name: jenkins-config
         configMap:
           name: jenkins
-      - name: jenkins-secrets
-        projected:
-          sources:
-          - secret:
-              name: jenkins
-              items:
-                - key: jenkins-admin-user
-                  path: jenkins-admin-username
-                - key: jenkins-admin-password
-                  path: jenkins-admin-password
       - name: jenkins-cache
         emptyDir: {}
       - name: jenkins-home
