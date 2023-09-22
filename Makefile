@@ -9,11 +9,14 @@ ARTIFACT_DIR ?= artifacts
 USER_AWS_CONFIG ?= ${HOME}/.aws
 
 SRC_CONTAINER_IMAGE ?= jenkins/jenkins
-SRC_CONTAINER_VERSION ?= lts-jdk17
+SRC_CONTAINER_VERSION ?= 2.414.2
+SRC_CONTAINER_DISTRIBUTION ?= lts-jdk17
+
+SRC_CONTAINER_TAG ?= $(SRC_CONTAINER_VERSION)-$(SRC_CONTAINER_DISTRIBUTION)
 
 TGT_CONTAINER_IMAGE ?= our-jenkins
-TGT_CONTAINER_BASE_TAG ?= $(SRC_CONTAINER_VERSION).$(shell date +%Y%m%dT%H%M)
-TGT_CONTAINER_ALT_TAGS := $(SRC_CONTAINER_VERSION) local-$(SRC_CONTAINER_VERSION)
+TGT_CONTAINER_BASE_TAG ?= $(SRC_CONTAINER_TAG).$(shell date +%Y%m%dT%H%M)
+TGT_CONTAINER_ALT_TAGS := $(SRC_CONTAINER_TAG) local-$(SRC_CONTAINER_TAG)
 
 SRC_PLUGIN_FILE ?= plugins.txt
 PLUGIN_FILE ?= plugins.yaml
@@ -32,7 +35,7 @@ HELM_WORKDIR_MOUNTS := 	$(foreach DIR,$(HELM_WORKDIR_SOURCES), -v ~/$(DIR):/root
 
 # Container based commands to for use handling target steps
 BASE_CMD := $(CONTAINER_ENGINE) run --rm -it $(BASE_WORKDIR) $(BASE_ENV)
-JENKINS_CMD := $(BASE_CMD) $(SRC_CONTAINER_IMAGE):$(SRC_CONTAINER_VERSION)
+JENKINS_CMD := $(BASE_CMD) $(SRC_CONTAINER_IMAGE):$(SRC_CONTAINER_TAG)
 PLUGIN_CMD := $(JENKINS_CMD) jenkins-plugin-cli --plugin-file $(SRC_PLUGIN_FILE) --available-updates --output yaml --hide-security-warnings
 HELM_CMD := $(BASE_CMD) $(HELM_WORKDIR_MOUNTS) alpine/helm
 
@@ -78,6 +81,14 @@ update_plugins: $(ARTIFACT_DIR)/$(PLUGIN_FILE)
 $(ARTIFACT_DIR)/%.yaml: $(KUSTOMIZE_FILES) $(ARTIFACT_DIR)
 	kustomize build k8s/overlays/$(*) > $(@)
 
+
+local-helm-chart: helm/local-values.yaml $(ARTIFACT_DIR)
+	helm template jenkins/jenkins --set controller.image=$(TGT_CONTAINER_IMAGE) --set controller.tag=$(SRC_CONTAINER_TAG) -f helm/local-values.yaml > $(ARTIFACT_DIR)/helm-local.yaml
+
+helm-chart: helm/values.yaml $(ARTIFACT_DIR)
+	helm template jenkins/jenkins --set controller.image=$(TGT_CONTAINER_IMAGE) --set controller.tag=$(TGT_CONTAINER_BASE_TAG) -f helm/values.yaml > $(ARTIFACT_DIR)/helm.yaml
+
+
 .PHONY: local-up
 local-up: $(ARTIFACT_DIR)/local.yaml	## Runs a local install using kind
 	podman kube play artifacts/local.yaml
@@ -86,3 +97,6 @@ local-up: $(ARTIFACT_DIR)/local.yaml	## Runs a local install using kind
 local-down: $(ARTIFACT_DIR)/local.yaml	## Runs a local install using kind
 	podman kube down artifacts/local.yaml
 
+.PHONY: run
+run: build
+	podman run -it --rm --network=podman --expose=8080 our-jenkins:local-lts-jdk17
