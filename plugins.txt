@@ -13,7 +13,6 @@ gravatar
 hashicorp-vault-pipeline
 jfrog
 jira
-job-import-plugin
 junit
 kubernetes
 metrics
@@ -22,8 +21,12 @@ oidc-provider
 pipeline-multibranch-defaults
 pipeline-graph-view
 pipeline-groovy-lib
+pipeline-model-api:2.2144.v077a_d1928a_40
 script-security
 slack
+ssh-agent
+ssh-credentials
+ssh-slaves
 warnings-ng
 workflow-aggregator
 workflow-step-api
