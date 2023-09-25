@@ -58,6 +58,7 @@ jsch:0.2.8-65.v052c39de79b_2
 junit:1240.vf9529b_881428
 kubernetes-client-api:6.8.1-224.vd388fca_4db_3b_
 kubernetes-credentials:0.11
+kubernetes-credentials-provider:1.234.vf3013b_35f5b_a
 kubernetes:4029.v5712230ccb_f8
 mailer:463.vedf8358e006b_
 matrix-project:808.v5a_b_5f56d6966
@@ -84,6 +85,7 @@ plain-credentials:143.v1b_df8b_d3b_e48
 plugin-util-api:3.3.0
 popper-api:1.16.1-3
 prism-api:1.29.0-8
+saml:4.429.v9a_781a_61f1da_
 scm-api:676.v886669a_199a_a_
 script-security:1275.v23895f409fb_d
 slack:684.v833089650554
