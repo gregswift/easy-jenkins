@@ -16,7 +16,7 @@ SRC_CONTAINER_TAG ?= $(SRC_CONTAINER_VERSION)-$(SRC_CONTAINER_DISTRIBUTION)
 
 TGT_CONTAINER_IMAGE ?= our-jenkins
 TGT_CONTAINER_BASE_TAG ?= $(SRC_CONTAINER_TAG).$(shell date +%Y%m%dT%H%M)
-TGT_CONTAINER_ALT_TAGS := $(SRC_CONTAINER_TAG) local-$(SRC_CONTAINER_TAG)
+TGT_CONTAINER_ALT_TAGS := $(SRC_CONTAINER_TAG) $(SRC_CONTAINER_DISTRIBUTION)
 
 SRC_PLUGIN_FILE ?= plugins.txt
 PLUGIN_FILE ?= plugins.yaml
@@ -61,6 +61,10 @@ clean:
 	rm -rf $(ARTIFACT_DIR)
 	#$(CONTAINER_ENGINE) clean
 
+.PHONY: clean-all
+clean-all: clean
+	$(CONTAINER_ENGINE) rmi $$($(CONTAINER_ENGINE) images -a | grep our-jenkins | awk '{print $$3}') --force
+
 .PHONY: build
 build: update_plugins
 	$(CONTAINER_ENGINE) build -f Containerfile -t $(TGT_CONTAINER_IMAGE):$(TGT_CONTAINER_BASE_TAG) .
@@ -77,6 +81,11 @@ $(ARTIFACT_DIR)/$(PLUGIN_FILE): $(SRC_PLUGIN_FILE) $(ARTIFACT_DIR)
 
 .PHONY: update_plugins
 update_plugins: $(ARTIFACT_DIR)/$(PLUGIN_FILE)
+
+.PHONY: force_update_plugins
+force_update_plugins: $(SRC_PLUGIN_FILE)
+	$(PLUGIN_CMD) --available-updates --output txt > $(SRC_PLUGIN_FILE).new
+	mv $(SRC_PLUGIN_FILE).new $(SRC_PLUGIN_FILE)
 
 $(ARTIFACT_DIR)/%.yaml: $(KUSTOMIZE_FILES) $(ARTIFACT_DIR)
 	kustomize build k8s/overlays/$(*) > $(@)
@@ -99,4 +108,5 @@ local-down: $(ARTIFACT_DIR)/local.yaml	## Runs a local install using kind
 
 .PHONY: run
 run: build
-	podman run -it --rm --network=podman --expose=8080 our-jenkins:local-lts-jdk17
+#	podman run ${BASE_WORKDIR} -p 127.0.0.1:8080:8080 -e JAVA_OPTS="-Djenkins.install.runSetupWizard=false" -e CASC_JENKINS_CONFIG=/data/casc.yaml -it --rm --network=podman --expose=8080 our-jenkins:local-lts-jdk17
+	podman run ${BASE_WORKDIR} -p 127.0.0.1:8080:8080 -e CASC_JENKINS_CONFIG=/data/casc.yaml -it --rm --network=podman --expose=8080 $(TGT_CONTAINER_IMAGE):$(SRC_CONTAINER_TAG)
