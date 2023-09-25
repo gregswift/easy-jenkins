@@ -20,3 +20,5 @@ USER jenkins
 COPY --chown=jenkins:jenkins artifacts/plugins.yaml /var/jenkins_home/plugins.yaml
 
 RUN jenkins-plugin-cli --plugin-file /var/jenkins_home/plugins.yaml --latest false
+
+ENV JAVA_OPTS "-Djenkins.install.runSetupWizard=false ${JAVA_OPTS:-}"
