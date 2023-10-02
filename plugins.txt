@@ -26,6 +26,7 @@ display-url-api:2.3.9
 dtkit-api:3.0.2
 durable-task:523.va_a_22cf15d5e0
 echarts-api:5.4.0-6
+extended-read-permission:53.v6499940139e5
 font-awesome-api:6.4.2-1
 forensics-api:2.3.0
 git-client:4.5.0
