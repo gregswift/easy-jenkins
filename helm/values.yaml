@@ -1,7 +1,20 @@
 controller:
-  tagLabel: "jdk17"
+  image: "easy-jenkins"
   installPlugins: false
+  jenkinsAdminEmail: admin@example.com
+  jenkinsUrl: jenkins.example.com
+  sidecars:
+    configAutoReload:
+      enabled: true
+  tagLabel: "lts-jdk17"
   JCasC:
+    authorizationStrategy: |-
+      loggedInUsersCanDoAnything:
+        allowAnonymousRead: false
+    configScripts:
+      welcome-message: |
+        jenkins:
+          systemMessage: Welcome to our CI/CD server.  Any changes made manually will be lost on daily pod restart.
     securityRealm: |-
       local:
         allowsSignup: false
@@ -10,6 +23,3 @@ controller:
         - id: "${chart-admin-username}"
           name: "Jenkins Admin"
           password: "${chart-admin-password}"
-    authorizationStrategy: |-
-      loggedInUsersCanDoAnything:
-        allowAnonymousRead: false
