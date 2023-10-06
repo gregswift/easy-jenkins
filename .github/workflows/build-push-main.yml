@@ -1,0 +1,134 @@
+########
+# GHA Workflow to setup, test, build and push a docker image
+# when a PR has been merged into the `main` branch.
+#
+# Workflow syntax documentation: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+########
+name: Build and push on main
+on:
+  ########
+  # When a Push event is received
+  # and the Push event targets the `main` branch
+  # then we want to execute this workflow.
+  # `on` syntax: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
+  #
+  # Events that can be used to trigger workflows:
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
+  ########
+  push:
+    branches:
+      - main
+
+########
+# A workflow run is made up of one or more jobs, which run in parallel by default.
+# Jobs: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobs
+#
+# In this example we have one job named `build`.
+########
+jobs:
+  build:
+    ########
+    # `runs-on` defines the type of machine to run the job on.
+    # Documentation: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    ########
+    runs-on: ubuntu-20.04
+
+    ########
+    # A job contains a sequence of tasks called steps to perform some kind of command/action
+    # within the runner machine.
+    # Documentation: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idsteps
+    ########
+    steps:
+      ########
+      # `actions/checkout` is one of the more common actions used in workflows.
+      # This action checks-out the repository, and more specifically the branch
+      # associated to this `pull_request` event so that the workflow can access it.
+      # Documentation: https://github.com/actions/checkout
+      ########
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      ########
+      # The `docker/login-action` action is used to login to a Docker registry.
+      #
+      # `docker/login-action` documentation: https://github.com/marketplace/actions/docker-login
+      ########
+      - name: Login to Registry
+        uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: quay.io
+          ####
+          # We are using a "secrets" context in this step. Both REGISTRY_USER
+          # and REGISTRY_PASSWORD have been added to this repository under
+          # Settings -> Secrets and variables -> Actions
+          #
+          # For information on learning about "secrets" please see the following documentation:
+          # GitHub Secrets: https://docs.github.com/en/actions/security-guides/encrypted-secrets
+          #
+          # For information on using "secrets" in a GitHub Actions workflow please review the following
+          # documentation on using the "secrets" context:
+          # https://docs.github.com/en/actions/learn-github-actions/contexts#secrets-context
+          ####
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Get Short Commit SHA
+        id: sha
+        run: echo "SHA_SHORT=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+
+      - name: Get OCI Compatible timestamp
+        id: buildstamp
+        run: echo "BUILDSTAMP=$(date +%Y%m%dT%H%MZ)" >> "$GITHUB_ENV"
+
+      - name: Add Make config data to environment for labeling info (which works, cause, awesome)
+        id: loadconfig
+        run: cat .config.mk >> "$GITHUB_ENV"
+
+      # Metadata as defined in OCI image spec annotations
+      # https://github.com/opencontainers/image-spec/blob/master/annotations.md
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.TGT_CONTAINER_REGISTRY }}/${{ env.TGT_CONTAINER_IMAGE }}
+          tags: |
+            type=raw,value=latest
+            type=ref,event=pr
+            type=raw,value=${{ env.SRC_CONTAINER_DISTRIBUTION }}
+            type=raw,value=${{ env.SRC_CONTAINER_VERSION }}-${{ env.SRC_CONTAINER_DISTRIBUTION }}
+            type=raw,value=${{ env.SRC_CONTAINER_VERSION }}-${{ env.SRC_CONTAINER_DISTRIBUTION }}.${{ env.SHA_SHORT }}
+            type=raw,value=${{ env.SRC_CONTAINER_VERSION }}-${{ env.SRC_CONTAINER_DISTRIBUTION }}.${{ env.BUILDSTAMP }}.${{ env.SHA_SHORT }}
+
+      ########
+      # The `docker/build-push-action` action is used to build and push Docker images.
+      # Using this action we can specify build-args, and tag(s) that we want to produce,
+      # and optionally push to our private docker registry.
+      #
+      # In the case of a push event (e.g. a pull request merging into `main`) we want
+      # to build, tag, and push our container(s) to the private container registry that
+      # we previously logged into using the `docker/login-action` action.
+      #
+      # `docker/build-push-action` documentation: https://github.com/marketplace/actions/build-and-push-docker-images
+      ########
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Containerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          build-args: |
+            IMAGE_AUTHORS="${{ env.CONTAINER_AUTHORS }}"
+            IMAGE_CREATED="${{ env.BUILDSTAMP }}"
+            IMAGE_DESCRIPTION="${{ env.CONTAINER_DESCRIPTION }}"
+            IMAGE_NAME="${{ env.TGT_CONTAINER_IMAGE }}"
+            IMAGE_REGISTRY="${{ env.TGT_CONTAINER_REGISTRY }}"
+            IMAGE_REVISION="${{ env.SHA_SHORT }}"
+            IMAGE_SOURCE="${{ env.CONTAINER_SOURCE }}"
+            IMAGE_TITLE="${{ env.CONTAINER_TITLE }}"
+            IMAGE_URL="${{ env.CONTAINER_URL }}"
+            SRC_IMAGE_NAME=${{ env.SRC_CONTAINER_REGISTRY}}/${{ env.SRC_CONTAINER_IMAGE }}
+            SRC_IMAGE_VERSION=${{ env.SRC_CONTAINER_VERSION }}
+            IMAGE_VERSION="${{ env.SRC_CONTAINER_VERSION }}-${{ env.SRC_CONTAINER_DISTRIBUTION }}.${{ env.BUILDSTAMP }}.${{ env.SHA_SHORT }}"
+          tags: ${{ steps.meta.outputs.tags }}

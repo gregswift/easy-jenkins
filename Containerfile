@@ -10,8 +10,9 @@ ARG IMAGE_TITLE
 ARG IMAGE_URL
 ARG IMAGE_VERSION=${SRC_IMAGE_VERSION}
 
-LABEL org.opencontainers.image.base.name ${IMAGE_REGISTRY}/${IMAGE_NAME}
+FROM ${SRC_IMAGE_NAME}:${SRC_IMAGE_VERSION}
 
+LABEL org.opencontainers.base.name ${SRC_IMAGE_NAME}:${SRC_IMAGE_VERSION}
 LABEL org.opencontainers.image.authors ${IMAGE_AUTHORS}
 LABEL org.opencontainers.image.created ${IMAGE_CREATED}
 LABEL org.opencontainers.image.name ${IMAGE_NAME}
@@ -20,8 +21,6 @@ LABEL org.opencontainers.image.revision ${IMAGE_REVISION}
 LABEL org.opencontainers.image.title ${IMAGE_TITLE}
 LABEL org.opencontainers.image.url ${IMAGE_URL}
 LABEL org.opencontainers.image.version ${IMAGE_VERSION}
-
-FROM ${SRC_IMAGE_NAME}:${SRC_IMAGE_VERSION}
 
 USER root
 
