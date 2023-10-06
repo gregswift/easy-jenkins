@@ -29,8 +29,8 @@ RUN apt-get update && apt-get install -y lsb-release
 
 USER jenkins
 
-COPY --chown=jenkins:jenkins artifacts/plugins.yaml /var/jenkins_home/plugins.yaml
+COPY --chown=jenkins:jenkins plugins.txt /var/jenkins_home/plugins.txt
 
-RUN jenkins-plugin-cli --plugin-file /var/jenkins_home/plugins.yaml --latest false
+RUN jenkins-plugin-cli --plugin-file /var/jenkins_home/plugins.txt --latest false
 
 ENV JAVA_OPTS "-Djenkins.install.runSetupWizard=false ${JAVA_OPTS:-}"

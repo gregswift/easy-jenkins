@@ -26,8 +26,7 @@ TGT_CONTAINER_BASE_TAG ?= $(SRC_CONTAINER_TAG).$(BUILDSTAMP).$(GIT_REF)
 TGT_CONTAINER_ALT_TAGS := $(SRC_CONTAINER_TAG) $(SRC_CONTAINER_TAG).$(GIT_REF) $(SRC_CONTAINER_DISTRIBUTION)
 TGT_CONTAINER ?= ${TGT_CONTAINER_REGISTRY}/$(TGT_CONTAINER_IMAGE):$(TGT_CONTAINER_BASE_TAG)
 
-SRC_PLUGIN_FILE ?= plugins.txt
-PLUGIN_FILE ?= plugins.yaml
+PLUGIN_FILE ?= plugins.txt
 
 BASE_USER := -u $(shell id -u ${USER}):$(shell id -g ${USER})
 BASE_WORKDIR := -w $(CONTAINER_WORK_DIR) -v "$(CURDIR)":$(CONTAINER_WORK_DIR)
@@ -61,7 +60,7 @@ HELM_WORKDIR_MOUNTS := 	$(foreach DIR,$(HELM_WORKDIR_SOURCES), -v ~/$(DIR):/root
 BASE_CMD := $(CONTAINER_ENGINE) run --rm -it $(BASE_WORKDIR) $(BASE_ENV)
 BUILD_CMD := $(CONTAINER_ENGINE) build -f Containerfile
 JENKINS_CMD := $(BASE_CMD) $(SRC_CONTAINER)
-PLUGIN_CMD := $(JENKINS_CMD) jenkins-plugin-cli --plugin-file $(SRC_PLUGIN_FILE) --available-updates --output yaml --hide-security-warnings
+PLUGIN_CMD := $(JENKINS_CMD) jenkins-plugin-cli --plugin-file $(PLUGIN_FILE) --available-updates --hide-security-warnings
 HELM_CMD := $(BASE_CMD) $(HELM_WORKDIR_MOUNTS) alpine/helm
 
 
@@ -92,7 +91,7 @@ clean-all: clean
 	$(CONTAINER_ENGINE) image prune --all --force --filter="label=org.opencontainers.image.base.name=$(TGT_CONTAINER_REGISTRY)/$(TGT_CONTAINER_IMAGE)" --filter="label=org.opencontainers.image.source=https://github.com/jenkinsci/docker"
 
 .PHONY: build
-build: update_plugins
+build: $(PLUGIN_FILE)
 	$(BUILD_CMD) -t $(TGT_CONTAINER) $(CONTAINER_BUILD_ARGS) .
 	for TAG in $(TGT_CONTAINER_ALT_TAGS); do \
 		$(CONTAINER_ENGINE) tag $(TGT_CONTAINER) $(TGT_CONTAINER_REGISTRY)/$(TGT_CONTAINER_IMAGE):$${TAG}; \
@@ -101,17 +100,10 @@ build: update_plugins
 $(ARTIFACT_DIR)/:
 	mkdir -p $(ARTIFACT_DIR)
 
-$(ARTIFACT_DIR)/$(PLUGIN_FILE): $(SRC_PLUGIN_FILE) $(ARTIFACT_DIR)
-	$(PLUGIN_CMD) --available-updates --output yaml > $(ARTIFACT_DIR)/$(PLUGIN_FILE)
-	@# Error out if the file is smaller or empty or leave that to the executor? its all in git
-
 .PHONY: update_plugins
-update_plugins: $(ARTIFACT_DIR)/$(PLUGIN_FILE)
-
-.PHONY: force_update_plugins
-force_update_plugins: $(SRC_PLUGIN_FILE)
-	$(PLUGIN_CMD) --available-updates --output txt > $(SRC_PLUGIN_FILE).new
-	mv $(SRC_PLUGIN_FILE).new $(SRC_PLUGIN_FILE)
+update_plugins: $(PLUGIN_FILE)
+	$(PLUGIN_CMD) --output txt > $(PLUGIN_FILE).new
+	mv $(PLUGIN_FILE).new $(PLUGIN_FILE)
 
 $(ARTIFACT_DIR)/%.yaml: $(KUSTOMIZE_FILES) $(ARTIFACT_DIR)
 	kustomize build k8s/overlays/$(*) > $(@)
