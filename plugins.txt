@@ -1,5 +1,5 @@
 ace-editor:1.1
-analysis-model-api:11.8.0
+analysis-model-api:11.10.0
 antisamy-markup-formatter:162.v0e6ec0fcfcf6
 apache-httpcomponents-client-4-api:4.5.14-208.v438351942757
 authentication-tokens:1.53.v1c90fd9191a_b_
@@ -12,15 +12,15 @@ caffeine-api:3.1.8-133.v17b_1ff2e0599
 checks-api:2.0.2
 cloudbees-bitbucket-branch-source:848.v42c6a_317eda_e
 cloudbees-folder:6.848.ve3b_fd7839a_81
-code-coverage-api:4.7.0
+code-coverage-api:4.8.0
 commons-lang3-api:3.13.0-62.v7d18e55f51e2
 commons-text-api:1.10.0-78.v3e7b_ea_d5a_fe1
 config-file-provider:959.vcff671a_4518b_
 configuration-as-code:1714.v09593e830cfa
 credentials-binding:636.v55f1275c7b_27
-credentials:1290.v2e5b_13eb_b_127
+credentials:1293.vff276f713473
 dark-theme:336.v02165cd8c2ee
-data-tables-api:1.13.6-4
+data-tables-api:1.13.6-5
 disable-github-multibranch-status:1.2
 display-url-api:2.200.vb_9327d658781
 dtkit-api:3.0.2
@@ -61,7 +61,7 @@ junit:1240.vf9529b_881428
 kubernetes-client-api:6.8.1-224.vd388fca_4db_3b_
 kubernetes-credentials:0.11
 kubernetes-credentials-provider:1.234.vf3013b_35f5b_a
-kubernetes:4029.v5712230ccb_f8
+kubernetes:4054.v2da_8e2794884
 mailer:463.vedf8358e006b_
 matrix-project:808.v5a_b_5f56d6966
 metrics:4.2.18-442.v02e107157925
@@ -72,7 +72,7 @@ oidc-provider:47.v182a_02f5b_771
 okhttp-api:4.11.0-157.v6852a_a_fa_ec11
 pipeline-build-step:505.v5f0844d8d126
 pipeline-graph-analysis:202.va_d268e64deb_3
-pipeline-graph-view:201.vf8943f17f402
+pipeline-graph-view:202.v6da_a_9e590325
 pipeline-groovy-lib:689.veec561a_dee13
 pipeline-input-step:477.v339683a_8d55e
 pipeline-milestone-step:111.v449306f708b_7
@@ -84,7 +84,7 @@ pipeline-stage-step:305.ve96d0205c1c6
 pipeline-stage-tags-metadata:2.2144.v077a_d1928a_40
 pitmutation:1.0-18
 plain-credentials:143.v1b_df8b_d3b_e48
-plugin-util-api:3.4.0
+plugin-util-api:3.6.0
 popper-api:1.16.1-3
 prism-api:1.29.0-8
 saml:4.429.v9a_781a_61f1da_
@@ -105,7 +105,7 @@ workflow-aggregator:596.v8c21c963d92d
 workflow-api:1283.v99c10937efcb_
 workflow-basic-steps:1042.ve7b_140c4a_e0c
 workflow-cps-global-lib:609.vd95673f149b_b
-workflow-cps:3793.v65dec41c3a_c3
+workflow-cps:3802.vd42b_fcf00b_a_c
 workflow-durable-task-step:1289.v4d3e7b_01546b_
 workflow-job:1348.v32a_a_f150910e
 workflow-multibranch:756.v891d88f2cd46
