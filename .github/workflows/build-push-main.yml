@@ -98,7 +98,6 @@ jobs:
             type=ref,event=pr
             type=raw,value=${{ env.SRC_CONTAINER_DISTRIBUTION }}
             type=raw,value=${{ env.SRC_CONTAINER_VERSION }}-${{ env.SRC_CONTAINER_DISTRIBUTION }}
-            type=raw,value=${{ env.SRC_CONTAINER_VERSION }}-${{ env.SRC_CONTAINER_DISTRIBUTION }}.${{ env.SHA_SHORT }}
             type=raw,value=${{ env.SRC_CONTAINER_VERSION }}-${{ env.SRC_CONTAINER_DISTRIBUTION }}.${{ env.BUILDSTAMP }}.${{ env.SHA_SHORT }}
 
       ########
