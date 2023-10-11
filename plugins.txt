@@ -67,6 +67,7 @@ matrix-project:808.v5a_b_5f56d6966
 metrics:4.2.18-442.v02e107157925
 mina-sshd-api-common:2.10.0-69.v28e3e36d18eb_
 mina-sshd-api-core:2.10.0-69.v28e3e36d18eb_
+multibranch-build-strategy-extension:1.0.10
 newrelic-deployment-notifier:1.11
 oidc-provider:47.v182a_02f5b_771
 okhttp-api:4.11.0-157.v6852a_a_fa_ec11
