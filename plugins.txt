@@ -12,7 +12,7 @@ caffeine-api:3.1.8-133.v17b_1ff2e0599
 checks-api:2.0.2
 cloudbees-bitbucket-branch-source:848.v42c6a_317eda_e
 cloudbees-folder:6.848.ve3b_fd7839a_81
-code-coverage-api:4.8.0
+code-coverage-api:4.9.0
 commons-lang3-api:3.13.0-62.v7d18e55f51e2
 commons-text-api:1.10.0-78.v3e7b_ea_d5a_fe1
 config-file-provider:959.vcff671a_4518b_
@@ -100,7 +100,7 @@ theme-manager:211.vef2a_42c645a_b_
 token-macro:384.vf35b_f26814ec
 trilead-api:2.84.v72119de229b_7
 variant:60.v7290fc0eb_b_cd
-warnings-ng:10.4.0
+warnings-ng:10.5.0
 workflow-aggregator:596.v8c21c963d92d
 workflow-api:1283.v99c10937efcb_
 workflow-basic-steps:1042.ve7b_140c4a_e0c
